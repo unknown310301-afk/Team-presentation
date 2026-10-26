@@ -1,0 +1,34 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: cravecart-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: cravecart
+      MYSQL_USER: craveuser
+      MYSQL_PASSWORD: cravepass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - cravecart-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  app:
+    build: .
+    container_name: cravecart-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/cravecart
+      SPRING_DATASOURCE_USERNAME: craveuser
+      SPRING_DATASOURCE_PASSWORD: cravepass
+    ports:
+      - "8080:8080"
+volumes:
+  cravecart-data:
